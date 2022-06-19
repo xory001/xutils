@@ -8,8 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"xutils/xsys"
-	"xutils/xzip"
+
+	"github.com/xory001/xutils/xsys"
+	"github.com/xory001/xutils/xzip"
 )
 
 type CXLogFile struct {
@@ -22,7 +23,7 @@ type CXLogFile struct {
 
 	logFileIndex int //from 0 - 9999
 	logFileDir   string
-	newFile      bool
+	//newFile      bool
 
 	//for new log
 	day    int
