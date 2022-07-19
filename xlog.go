@@ -3,6 +3,8 @@ package xutils
 import (
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"log"
 	"os"
 	"path/filepath"
@@ -44,7 +46,7 @@ func NewXLogFile(logDir string, maxFileSize int64, zipLog bool) *CXLogFile {
 		}
 	}
 	if 0 == maxFileSize {
-		maxFileSize = 100 //50 * 1024 * 1024
+		maxFileSize = 50 * 1024 * 1024
 	}
 	t := time.Now().UTC()
 	xlog := &CXLogFile{logFileDir: logDir, maxFileSize: maxFileSize, day: t.Day(), hour: t.Hour(), min: t.Minute(), second: t.Second()}
@@ -148,7 +150,7 @@ func (x *CXLogFile) generateFileName() (string, error) {
 func (x *CXLogFile) processHistoryLogFile() {
 	moduleName, _ := os.Executable()
 	execName := filepath.Base(moduleName)
-	tickerCheck := time.NewTicker(time.Second)
+	tickerCheck := time.NewTicker(time.Hour)
 	for timeNow := range tickerCheck.C {
 		sliceFiles, err := ReadDirAscByTime(x.logFileDir)
 		if nil == err {
@@ -217,4 +219,65 @@ func (x *CXLogFile) zipFiles(sliceSrcFile []string, execName string, lastTime ti
 	destFile := filepath.Join(destDir, fmt.Sprintf("%s_info_%02d.tar.gz", execName, lastTime.Hour()))
 	ZipFilesToTarGz(sliceSrcFile, destFile)
 	sliceSrcFile = nil
+}
+
+// zap log
+
+type LogSpeedFunc func(string, ...zap.Field)
+type LogFunc func(...interface{})
+
+var Info LogFunc
+var Warn LogFunc
+var Err LogFunc
+
+var g_zapLog *zap.Logger = nil
+var g_zapLogS *zap.SugaredLogger = nil
+
+func InitLogWapper() {
+	initZap()
+	if nil != g_zapLogS {
+		Info = g_zapLogS.Info
+		Warn = g_zapLogS.Warn
+		Err = g_zapLogS.Error
+	}
+}
+
+func initZap() {
+	if Debug() {
+		g_zapLog, err := zap.NewProduction()
+		if nil != err {
+			fmt.Println("initZap, NewProduction err = ", err)
+			return
+		}
+		g_zapLogS = g_zapLog.Sugar()
+	} else {
+		writeSyncer := initLogWriter()
+		encoder := initEncoder()
+		core := zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
+		g_zapLog = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(0))
+		g_zapLogS = g_zapLog.Sugar()
+	}
+}
+
+func initEncoder() zapcore.Encoder {
+	encoderConfig := zap.NewProductionEncoderConfig()
+	//encoderConfig.ConsoleSeparator = " "
+	encoderConfig.EncodeTime = func(time time.Time, encoder zapcore.PrimitiveArrayEncoder) {
+		layout := "2006-01-02 15:04:05.000 UTC"
+		encoder.AppendString(time.UTC().Format(layout))
+	}
+	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	encoderConfig.FunctionKey = "F"
+	return zapcore.NewConsoleEncoder(encoderConfig)
+}
+
+func initLogWriter() zapcore.WriteSyncer {
+	if Debug() {
+		return zapcore.AddSync(os.Stdout)
+	}
+	logExe, _ := os.Executable()
+	logPath := filepath.Dir(logExe)
+	logPath = filepath.Join(logPath, "logs")
+	xlog := NewXLogFile(logPath, 0, true)
+	return zapcore.AddSync(xlog)
 }
