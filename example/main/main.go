@@ -1,9 +1,8 @@
 package main
 
 import (
+	"github.com/xory001/xutils"
 	"log"
-
-	"github.com/xory001/xutils/xpredefine"
 )
 
 func init() {
@@ -12,6 +11,6 @@ func init() {
 
 func main() {
 	log.Println("xutils example start")
-	xpredefine.SetDebug(true)
+	xutils.SetDebug(true)
 	log.Println("xutils example end")
 }

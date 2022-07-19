@@ -1,4 +1,4 @@
-package xzip
+package xutils
 
 import (
 	"archive/tar"

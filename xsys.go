@@ -1,4 +1,4 @@
-package xsys
+package xutils
 
 import (
 	"crypto/md5"

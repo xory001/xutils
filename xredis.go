@@ -1,4 +1,4 @@
-package xredis
+package xutils
 
 import (
 	"context"

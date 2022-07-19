@@ -1,4 +1,4 @@
-package xpredefine
+package xutils
 
 var l_outDebugInfo = false
 var l_debugMode = false

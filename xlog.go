@@ -1,4 +1,4 @@
-package xlogs
+package xutils
 
 import (
 	"errors"
@@ -8,9 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/xory001/xutils/xsys"
-	"github.com/xory001/xutils/xzip"
 )
 
 type CXLogFile struct {
@@ -153,7 +150,7 @@ func (x *CXLogFile) processHistoryLogFile() {
 	execName := filepath.Base(moduleName)
 	tickerCheck := time.NewTicker(time.Second)
 	for timeNow := range tickerCheck.C {
-		sliceFiles, err := xsys.ReadDirAscByTime(x.logFileDir)
+		sliceFiles, err := ReadDirAscByTime(x.logFileDir)
 		if nil == err {
 			var sliceSrcFile []string
 			var fileDay = 0
@@ -218,6 +215,6 @@ func (x *CXLogFile) zipFiles(sliceSrcFile []string, execName string, lastTime ti
 	destDir := filepath.Join(x.logFileDir, lastTime.Format("20060102"))
 	os.MkdirAll(destDir, 0777)
 	destFile := filepath.Join(destDir, fmt.Sprintf("%s_info_%02d.tar.gz", execName, lastTime.Hour()))
-	xzip.ZipFilesToTarGz(sliceSrcFile, destFile)
+	ZipFilesToTarGz(sliceSrcFile, destFile)
 	sliceSrcFile = nil
 }
