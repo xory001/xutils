@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -277,7 +278,7 @@ func initEncoder() zapcore.Encoder {
 
 func initLogWriter() zapcore.WriteSyncer {
 	if Debug() {
-		return zapcore.AddSync(os.Stdout)
+		return zapcore.AddSync(io.MultiWriter(os.Stdout, os.Stderr))
 	}
 	logExe, _ := os.Executable()
 	logPath := filepath.Dir(logExe)
