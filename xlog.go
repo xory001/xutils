@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -102,9 +101,9 @@ func (x *CXLogFile) createNewLogFileIfNeed() error {
 
 	if nil == x.logFile {
 		err = x.createNewLogFile()
-	}
-	if nil != x.logFile {
-		fmt.Println("log file name =", x.logFile.Name())
+		if nil != x.logFile {
+			fmt.Println("log file name =", x.logFile.Name())
+		}
 	}
 
 	return err
@@ -131,7 +130,7 @@ func (x *CXLogFile) createNewLogFile() error {
 func (x *CXLogFile) generateFileName() (string, error) {
 	strExeFullName, err := os.Executable()
 	if nil != err {
-		log.Println("Executable err =", err)
+		fmt.Println("Executable err =", err)
 		return "", err
 	}
 	strExeName := filepath.Base(strExeFullName)
