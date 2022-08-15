@@ -44,6 +44,11 @@ func NewXLogFile(logDir string, maxFileSize int64, zipLog bool) *CXLogFile {
 		if os.IsNotExist(err) {
 			os.MkdirAll(logDir, 0644)
 		}
+	} else {
+		_, err := os.Stat(logDir)
+		if os.IsNotExist(err) {
+			os.MkdirAll(logDir, 644)
+		}
 	}
 	if 0 == maxFileSize {
 		maxFileSize = 50 * 1024 * 1024
