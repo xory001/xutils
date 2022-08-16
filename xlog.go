@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 )
+
+func init() {
+	InitLogWapper(false)
+}
 
 type CXLogFile struct {
 	logFileName string
@@ -230,38 +233,42 @@ func (x *CXLogFile) zipFiles(sliceSrcFile []string, execName string, lastTime ti
 
 type LogSpeedFunc func(string, ...zap.Field)
 type LogFunc func(...interface{})
+type LogFuncf func(template string, args ...interface{})
 
+var Debug LogFunc
 var Info LogFunc
 var Warn LogFunc
 var Err LogFunc
+var Debugf LogFuncf
+var Infof LogFuncf
+var Warnf LogFuncf
+var Errf LogFuncf
 
 var g_zapLog *zap.Logger = nil
 var g_zapLogS *zap.SugaredLogger = nil
+var g_zapDebugMode = false
 
-func InitLogWapper() {
+func InitLogWapper(debugMode bool) {
+	g_zapDebugMode = debugMode
 	initZap()
 	if nil != g_zapLogS {
+		Debug = g_zapLogS.Debug
 		Info = g_zapLogS.Info
 		Warn = g_zapLogS.Warn
 		Err = g_zapLogS.Error
+		Debugf = g_zapLogS.Debugf
+		Infof = g_zapLogS.Infof
+		Warnf = g_zapLogS.Warnf
+		Errf = g_zapLogS.Errorf
 	}
 }
 
 func initZap() {
-	if Debug() {
-		g_zapLog, err := zap.NewProduction()
-		if nil != err {
-			fmt.Println("initZap, NewProduction err = ", err)
-			return
-		}
-		g_zapLogS = g_zapLog.Sugar()
-	} else {
-		writeSyncer := initLogWriter()
-		encoder := initEncoder()
-		core := zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
-		g_zapLog = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(0))
-		g_zapLogS = g_zapLog.Sugar()
-	}
+	writeSyncer := initLogWriter()
+	encoder := initEncoder()
+	core := zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
+	g_zapLog = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(0))
+	g_zapLogS = g_zapLog.Sugar()
 }
 
 func initEncoder() zapcore.Encoder {
@@ -277,8 +284,8 @@ func initEncoder() zapcore.Encoder {
 }
 
 func initLogWriter() zapcore.WriteSyncer {
-	if Debug() {
-		return zapcore.AddSync(io.MultiWriter(os.Stdout, os.Stderr))
+	if g_zapDebugMode {
+		return zapcore.AddSync(os.Stderr)
 	}
 	logExe, _ := os.Executable()
 	logPath := filepath.Dir(logExe)

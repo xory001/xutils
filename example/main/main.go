@@ -11,6 +11,9 @@ func init() {
 
 func main() {
 	log.Println("xutils example start")
-	xutils.SetDebug(true)
+	//xutils.Info("aaaa")
+	xutils.InitLogWapper(true)
+	xutils.Info("bbb")
+	xutils.Info("ccc")
 	log.Println("xutils example end")
 }
