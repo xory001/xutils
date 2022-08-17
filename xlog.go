@@ -96,6 +96,7 @@ func (x *CXLogFile) createNewLogFileIfNeed() error {
 			x.logFile.Close()
 			x.logFile = nil
 		}
+		x.logFileIndex = 0
 		//err = x.createNewLogFileIfNeed()
 		//if x.newFile { //need create new log file
 		//	x.newFile = false
@@ -188,7 +189,7 @@ func (x *CXLogFile) processHistoryLogFile() {
 									lastTime = fileTime
 									continue
 								} else {
-									x.zipFiles(sliceSrcFile, execName, lastTime)
+									x.zipFiles(sliceSrcFile, execName, lastTime, true)
 									sliceSrcFile = nil
 
 									fileHour = fileTime.Hour()
@@ -197,7 +198,7 @@ func (x *CXLogFile) processHistoryLogFile() {
 									continue
 								}
 							} else {
-								x.zipFiles(sliceSrcFile, execName, lastTime)
+								x.zipFiles(sliceSrcFile, execName, lastTime, true)
 								sliceSrcFile = nil
 
 								fileDay = fileTime.Day()
@@ -208,7 +209,7 @@ func (x *CXLogFile) processHistoryLogFile() {
 							}
 						} else { //if fileTime.Day() != timeNow.UTC().Day() { //need zip
 							if len(sliceSrcFile) > 0 {
-								x.zipFiles(sliceSrcFile, execName, lastTime)
+								x.zipFiles(sliceSrcFile, execName, lastTime, true)
 								sliceSrcFile = nil
 							}
 							break
@@ -221,12 +222,16 @@ func (x *CXLogFile) processHistoryLogFile() {
 	}
 }
 
-func (x *CXLogFile) zipFiles(sliceSrcFile []string, execName string, lastTime time.Time) {
+func (x *CXLogFile) zipFiles(sliceSrcFile []string, execName string, lastTime time.Time, del bool) {
 	destDir := filepath.Join(x.logFileDir, lastTime.Format("20060102"))
 	os.MkdirAll(destDir, 0777)
 	destFile := filepath.Join(destDir, fmt.Sprintf("%s_info_%02d.tar.gz", execName, lastTime.Hour()))
 	ZipFilesToTarGz(sliceSrcFile, destFile)
-	sliceSrcFile = nil
+	if del {
+		for _, val := range sliceSrcFile {
+			os.Remove(val)
+		}
+	}
 }
 
 // zap log
