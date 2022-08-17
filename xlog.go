@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	InitLogWapper(false)
+	InitLogWrapper(false)
 }
 
 type CXLogFile struct {
@@ -251,10 +251,11 @@ var Errf LogFuncf
 
 var g_zapLog *zap.Logger = nil
 var g_zapLogS *zap.SugaredLogger = nil
-var g_zapDebugMode = false
+var g_zapOut2Stderr = false
 
-func InitLogWapper(debugMode bool) {
-	g_zapDebugMode = debugMode
+// InitLogWrapper default out to file
+func InitLogWrapper(out2stderr bool) {
+	g_zapOut2Stderr = out2stderr
 	initZap()
 	if nil != g_zapLogS {
 		Debug = g_zapLogS.Debug
@@ -289,7 +290,7 @@ func initEncoder() zapcore.Encoder {
 }
 
 func initLogWriter() zapcore.WriteSyncer {
-	if g_zapDebugMode {
+	if g_zapOut2Stderr {
 		return zapcore.AddSync(os.Stderr)
 	}
 	logExe, _ := os.Executable()
