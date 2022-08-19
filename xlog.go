@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	InitLogWrapper(false)
+	InitLogWrapper(0, true, false)
 }
 
 type CXLogFile struct {
@@ -225,7 +225,7 @@ func (x *CXLogFile) processHistoryLogFile() {
 func (x *CXLogFile) zipFiles(sliceSrcFile []string, execName string, lastTime time.Time, del bool) {
 	destDir := filepath.Join(x.logFileDir, lastTime.Format("20060102"))
 	os.MkdirAll(destDir, 0777)
-	destFile := filepath.Join(destDir, fmt.Sprintf("%s_info_%02d.tar.gz", execName, lastTime.Hour()))
+	destFile := filepath.Join(destDir, fmt.Sprintf("%s_logs_%s.tar.gz", execName, lastTime.Format("2006010215")))
 	ZipFilesToTarGz(sliceSrcFile, destFile)
 	if del {
 		for _, val := range sliceSrcFile {
@@ -251,11 +251,21 @@ var Errf LogFuncf
 
 var g_zapLog *zap.Logger = nil
 var g_zapLogS *zap.SugaredLogger = nil
-var g_zapOut2Stderr = false
 
-// InitLogWrapper default out to file
-func InitLogWrapper(out2stderr bool) {
-	g_zapOut2Stderr = out2stderr
+var g_bOut2Stderr = false
+var g_nMaxLogFileSize int64 = 50 * 1024 * 1024
+var g_bZipLogFile = true
+
+// InitLogWrapper
+// maxFileSizeBytes, 0 is set to 50MB
+// zipLog, zip logs when write to file
+// out2stderr, out to file default
+func InitLogWrapper(maxFileSizeBytes int64, zipLog bool, out2stderr bool) {
+	if maxFileSizeBytes > 0 {
+		g_nMaxLogFileSize = maxFileSizeBytes
+	}
+	g_bZipLogFile = zipLog
+	g_bOut2Stderr = out2stderr
 	initZap()
 	if nil != g_zapLogS {
 		Debug = g_zapLogS.Debug
@@ -290,12 +300,12 @@ func initEncoder() zapcore.Encoder {
 }
 
 func initLogWriter() zapcore.WriteSyncer {
-	if g_zapOut2Stderr {
+	if g_bOut2Stderr {
 		return zapcore.AddSync(os.Stderr)
 	}
 	logExe, _ := os.Executable()
 	logPath := filepath.Dir(logExe)
 	logPath = filepath.Join(logPath, "logs")
-	xlog := NewXLogFile(logPath, 0, true)
+	xlog := NewXLogFile(logPath, g_nMaxLogFileSize, g_bZipLogFile)
 	return zapcore.AddSync(xlog)
 }
