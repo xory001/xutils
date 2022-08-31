@@ -168,10 +168,11 @@ func (x *CXLogFile) processHistoryLogFile() {
 			var fileHour = 0
 			var lastTime time.Time
 			for _, file := range sliceFiles {
-				fmt.Println("file =", file.Name())
+				//fmt.Println("file =", file.Name())
 				if file.IsDir() {
 					//delete expire data file
 				} else {
+					//is .log file
 					if strings.Contains(file.Name(), execName) && (".log" == filepath.Ext(file.Name())) {
 						fileInfo, _ := file.Info()
 						fileTime := fileInfo.ModTime().UTC()
