@@ -5,6 +5,8 @@ import (
 	"github.com/3th1nk/cidr"
 	"math"
 	"net"
+	"net/http"
+	"strings"
 )
 
 func IPString2Long(ip string) (uint32, error) {
@@ -46,4 +48,21 @@ func IpCidr2IpRange(ipCidr string) (ipStart, ipEnd string, err error) {
 		return ipStart, ipEnd, nil
 	}
 	return "", "", err
+}
+
+//GetClientAccessIP for nginx
+func GetClientAccessIP(r *http.Request) string {
+	var ip string
+	for _, ip = range strings.Split(r.Header.Get("X-Forwarded-For"), ",") {
+		ip = strings.TrimSpace(ip)
+		if len(ip) > 0 {
+			return ip
+		}
+	}
+
+	ip = strings.TrimSpace(r.Header.Get("X-Real-Ip"))
+	if len(ip) > 0 {
+		return ip
+	}
+	return ""
 }
