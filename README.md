@@ -1,5 +1,5 @@
 # xutils
-utils lib for go language
+utils lib for go language, eg. logs, zip and unzip file or folder, and so on
 
 go replace:   
 https://studygolang.com/articles/27265
